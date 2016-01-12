@@ -53,28 +53,30 @@ module.exports = function (aws, options) {
 		
 			var retry = 0;
 
-      client.putBuffer(file.contents, uploadPath, headers, function(err, res) {
-        if (err || res.statusCode !== 200) {
-						gutil.log(gutil.colors.red('[FAILED] ' + (err || res.statusCode), file.path + " -> " + uploadPath));
-						log_file.write('[FAILED] ' + file.path + '\n');
-						if (retry === 0) {
-							retry = 1;
-							file.retry = 1;
-							gutil.log(gutil.colors.yellow('Retrying..'));
-							uploadFile();
+      var uploadFile = function(){
+				client.putBuffer(file.contents, uploadPath, headers, function(err, res) {
+					if (err || res.statusCode !== 200) {
+							gutil.log(gutil.colors.red('[FAILED] ' + (err || res.statusCode), file.path + " -> " + uploadPath));
+							log_file.write('[FAILED] ' + file.path + '\n');
+							if (retry === 0) {
+								retry = 1;
+								file.retry = 1;
+								gutil.log(gutil.colors.yellow('Retrying..'));
+								uploadFile();
+							} else {
+								retry = 0;
+							}
 						} else {
-							retry = 0;
+							if (file.retry === 1) {
+								gutil.log(gutil.colors.blue('[SUCCESS]', file.path + " -> " + uploadPath));
+								log_file.write('[SUCCESS] ' + file.path + '\n');
+							}	else {
+								gutil.log(gutil.colors.green('[SUCCESS]', file.path + " -> " + uploadPath));
+							}
+							res.resume();
 						}
-					} else {
-						if (file.retry === 1) {
-							gutil.log(gutil.colors.blue('[SUCCESS]', file.path + " -> " + uploadPath));
-							log_file.write('[SUCCESS] ' + file.path + '\n');
-						}	else {
-							gutil.log(gutil.colors.green('[SUCCESS]', file.path + " -> " + uploadPath));
-						}
-						res.resume();
-					}
-      });
+				});
+			}
 
       return file;
   });
