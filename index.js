@@ -4,6 +4,7 @@ var es = require('event-stream');
 var knox = require('knox');
 var gutil = require('gulp-util');
 var mime = require('mime');
+var fs = require('fs');
 mime.default_type = 'text/plain';
 
 module.exports = function (aws, options) {
@@ -48,14 +49,29 @@ module.exports = function (aws, options) {
       }
 
       headers['Content-Length'] = file.stat.size;
+			var log_file = fs.createWriteStream(__dirname + '/debug.log', {flags : 'w'});
 
       client.putBuffer(file.contents, uploadPath, headers, function(err, res) {
         if (err || res.statusCode !== 200) {
-          gutil.log(gutil.colors.red('[FAILED]', file.path + " -> " + uploadPath));
-        } else {
-          gutil.log(gutil.colors.green('[SUCCESS]', file.path + " -> " + uploadPath));
-          res.resume();
-        }
+						gutil.log(gutil.colors.red('[FAILED] ' + (err || res.statusCode), file.path + " -> " + uploadPath));
+						log_file.write('[FAILED] ' + file.path + '\n');
+						if (retry === 0) {
+							retry = 1;
+							file.retry = 1;
+							gutil.log(gutil.colors.yellow('Retrying..'));
+							uploadFile();
+						} else {
+							retry = 0;
+						}
+					} else {
+						if (file.retry === 1) {
+							gutil.log(gutil.colors.blue('[SUCCESS]', file.path + " -> " + uploadPath));
+							log_file.write('[SUCCESS] ' + file.path + '\n');
+						}	else {
+							gutil.log(gutil.colors.green('[SUCCESS]', file.path + " -> " + uploadPath));
+						}
+						res.resume();
+					}
       });
 
       return file;
