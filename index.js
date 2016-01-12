@@ -50,6 +50,8 @@ module.exports = function (aws, options) {
 
       headers['Content-Length'] = file.stat.size;
 			var log_file = fs.createWriteStream(__dirname + '/debug.log', {flags : 'w'});
+		
+			var retry = 0;
 
       client.putBuffer(file.contents, uploadPath, headers, function(err, res) {
         if (err || res.statusCode !== 200) {
