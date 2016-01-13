@@ -57,7 +57,7 @@ module.exports = function (aws, options) {
 				client.putBuffer(file.contents, uploadPath, headers, function(err, res) {
 					if (err || res.statusCode !== 200) {
 							gutil.log(gutil.colors.red('[FAILED] ' + (err || res.statusCode), file.path + " -> " + uploadPath));
-							log += (new Date().now()) + '[FAILED] ' + file.path + '\n';
+							log += (new Date().toISOString()) + '[FAILED] ' + file.path + '\n';
 							log_file.write(log);
 							if (retry === 0) {
 								retry = 1;
