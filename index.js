@@ -68,7 +68,6 @@ module.exports = function (aws, options) {
 								if(retry > 5){
 									log += (new Date().toISOString()) + '[ERROR] Too much retry ' + file.path + '\n';
 									log_file.write(log);
-									res.resume();
 								}else{
 									retry += 1;
 									file.retry += 1;
